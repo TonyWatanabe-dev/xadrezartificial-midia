@@ -1,0 +1,27 @@
+name: Publicar no Zernio
+on:
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: "publicar ou reagendar"
+        type: choice
+        options: [publicar, reagendar, status, retry, remover]
+        default: publicar
+      teste:
+        description: "Só testar (não publica)"
+        type: boolean
+        default: false
+      so:
+        description: "Só este vídeo (ex.: xadrez_01_america_do_sul). Vazio = todos"
+        default: ""
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: false }
+      - run: python ${{ inputs.acao == 'reagendar' && 'reagendar.py' || inputs.acao == 'status' && 'status.py' || inputs.acao == 'retry' && 'retry.py' || inputs.acao == 'remover' && 'remover.py' || 'publicar.py' }}
+        env:
+          TESTE: ${{ inputs.teste }}
+          SO: ${{ inputs.so }}
+          ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
