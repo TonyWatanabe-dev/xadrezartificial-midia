@@ -35,7 +35,9 @@ for p in json.load(open("posts.json", encoding="utf-8")):
     for plat, acc in alvo.items():
         e = {"platform": plat, "accountId": acc}
         if plat == "youtube": e["platformSpecificData"] = {"title": p["titulo_youtube"], "visibility": "public"}
-        if plat == "instagram": e["platformSpecificData"] = {"firstComment": p["comentario_fixado"]}
+        if plat == "instagram":
+            e["platformSpecificData"] = {"firstComment": p["comentario_fixado"]}
+            if p.get("capa"): e["platformSpecificData"]["instagramThumbnail"] = RAW + p["capa"]
         plats.append(e)
     item = {"type": "video", "url": RAW + p["video"]}
     if p.get("capa"): item["thumbnail"] = RAW + p["capa"]
@@ -53,6 +55,6 @@ for p in json.load(open("posts.json", encoding="utf-8")):
         urls_old = " ".join(m.get("url", "") for m in old.get("mediaItems", []))
         if p["video"] in urls_old or (p.get("substitui") and p["substitui"] in urls_old):
             print("  removendo agendamento antigo", old["_id"], call("DELETE", f'/posts/{old["_id"]}')[0])
-    chave = str(uuid.uuid5(uuid.NAMESPACE_URL, RAW + p["video"] + "|" + p.get("capa", "")))
+    chave = str(uuid.uuid5(uuid.NAMESPACE_URL, RAW + p["video"] + "|" + p.get("capa", "") + "|igthumb"))
     st, r = call("POST", "/posts", body, {"Idempotency-Key": chave})
     print(p["id"], st, (r.get("post", {}).get("status") if isinstance(r, dict) else r))
