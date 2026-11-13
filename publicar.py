@@ -34,6 +34,7 @@ for p in json.load(open("posts.json", encoding="utf-8")):
     if SO and p["id"] != SO: continue
     plats = []
     for plat, acc in alvo.items():
+        if p.get("plataformas") and plat not in p["plataformas"]: continue
         e = {"platform": plat, "accountId": acc}
         if plat == "youtube": e["platformSpecificData"] = {"title": p["titulo_youtube"], "visibility": "public"}
         if plat == "instagram":
