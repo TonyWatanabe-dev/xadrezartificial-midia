@@ -1,4 +1,5 @@
-"""Remove da agenda do Zernio os posts agendados cujos vídeos estão em remover.json (lista de arquivos). Não apaga os arquivos."""
+"""Itens: "video.mp4" ou "video.mp4|instagram" (só posts que incluem essa rede).
+Remove da agenda do Zernio os posts agendados cujos vídeos estão em remover.json (lista de arquivos). Não apaga os arquivos."""
 import json, os, urllib.request
 API = "https://zernio.com/api/v1"; KEY = os.environ["ZERNIO_API_KEY"]
 DRY = os.environ.get("TESTE") == "true"
@@ -12,6 +13,8 @@ req = urllib.request.Request(API + "/posts?status=scheduled&limit=100", headers=
 posts = json.loads(urllib.request.urlopen(req).read()).get("posts", [])
 for p in posts:
     urls = " ".join(m.get("url", "") for m in p.get("mediaItems", []))
-    for v in alvo:
-        if v in urls:
+    plats = {x.get("platform") for x in p.get("platforms", [])}
+    for item in alvo:
+        v, _, so = item.partition("|")  # "video.mp4" ou "video.mp4|instagram"
+        if v in urls and (not so or so in plats):
             print(v, p.get("scheduledFor"), "teste" if DRY else call("DELETE", f'/posts/{p["_id"]}'))
