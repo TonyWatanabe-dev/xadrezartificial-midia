@@ -44,7 +44,7 @@ for p in json.load(open("posts.json", encoding="utf-8")):
     item = {"type": "video", "url": RAW + p["video"]}
     if p.get("capa"): item["thumbnail"] = RAW + p["capa"]
     body = {"content": p["legenda"], "mediaItems": [item], "platforms": plats}
-    if "tiktok" in alvo:
+    if any(x["platform"] == "tiktok" for x in plats):
         body["tiktokSettings"] = {"privacy_level": "PUBLIC_TO_EVERYONE", "allow_comment": True, "allow_duet": True,
                                   "allow_stitch": True, "content_preview_confirmed": True, "express_consent_given": True}
         if p.get("capa"): body["tiktokSettings"]["video_cover_image_url"] = RAW + p["capa"]
@@ -55,8 +55,9 @@ for p in json.load(open("posts.json", encoding="utf-8")):
     # substitui um agendamento antigo do mesmo vídeo (ex.: para trocar a capa)
     for old in agendados:
         urls_old = " ".join(m.get("url", "") for m in old.get("mediaItems", []))
-        if p["video"] in urls_old or (p.get("substitui") and p["substitui"] in urls_old):
+        plats_old = {x.get("platform") for x in old.get("platforms", [])}
+        if (p["video"] in urls_old or (p.get("substitui") and p["substitui"] in urls_old)) and plats_old & {x["platform"] for x in plats}:
             print("  removendo agendamento antigo", old["_id"], call("DELETE", f'/posts/{old["_id"]}')[0])
-    chave = str(uuid.uuid5(uuid.NAMESPACE_URL, RAW + p["video"] + "|" + p.get("capa", "") + "|igthumb|igtt"))
+    chave = str(uuid.uuid5(uuid.NAMESPACE_URL, RAW + p["video"] + "|" + p.get("capa", "") + "|" + ",".join(sorted(x["platform"] for x in plats)) + "|v3"))
     st, r = call("POST", "/posts", body, {"Idempotency-Key": chave})
     print(p["id"], st, (r.get("post", {}).get("status") if isinstance(r, dict) else r))
